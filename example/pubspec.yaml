@@ -13,8 +13,8 @@ dependencies:
     sdk: flutter
   airwatch_socket_workaround:
     path: ../
-  http: 0.12.2
-  logging: ^0.11.4
+  http: ^0.13.3
+  logging: ^1.0.1
 
 
   cupertino_icons: ^1.0.0

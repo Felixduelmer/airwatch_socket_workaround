@@ -30,8 +30,7 @@ class AirWatchHttpRequestWorkAroundImpl implements AirWatchHttpWorkAround {
     assert(request.method != null, 'request method cannot be null');
     if (request.url == null || request.url.toString().isEmpty)
       throw ArgumentError('request.url cannot be null/empty');
-    var requestContentType =
-        request.headers['Content-Type'] ?? request.headers['content-type'];
+    var requestContentType = request.headers['Content-Type'] ?? request.headers['content-type'];
 
     final contentType = requestContentType != null
         ? ContentType.parse(requestContentType)
@@ -57,16 +56,13 @@ class AirWatchHttpRequestWorkAroundImpl implements AirWatchHttpWorkAround {
     }
 
     var statusCode = data["statusCode"] ?? 0;
-    return http.Response.bytes(
-        bodyProvider.getEncoding(request).encode(data["data"] ?? ''),
+    return http.Response.bytes(bodyProvider.getEncoding(request).encode(data["data"] ?? ''),
         statusCode > 100 ? statusCode : 500,
-        headers: headers,
-        request: request);
+        headers: headers, request: request);
   }
 }
 
-class DefaultAirWatchHttpWorkAroundConfiguration
-    implements AirWatchHttpWorkAroundConfiguration {
+class DefaultAirWatchHttpWorkAroundConfiguration implements AirWatchHttpWorkAroundConfiguration {
   @override
   ContentType get defaultContentType => ContentType.json;
 }

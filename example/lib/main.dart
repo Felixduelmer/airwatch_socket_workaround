@@ -1,15 +1,14 @@
+import 'dart:async';
+
 import 'package:airwatch_socket_workaround_example/src/domain/http.dart';
 import 'package:airwatch_socket_workaround_example/src/presentation/http_tryout_widget.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-
 import 'package:flutter/services.dart';
-import 'package:airwatch_socket_workaround/airwatch_socket_workaround.dart';
-
 
 void main() {
   /// dependencies wire block
   var httpClient = HttpClientFactory().build();
+
   /// end dependencies wire block
   runApp(MyApp(httpClient: httpClient));
 }

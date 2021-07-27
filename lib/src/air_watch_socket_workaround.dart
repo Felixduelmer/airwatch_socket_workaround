@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:airwatch_socket_workaround/airwatch_socket_workaround.dart';
+
 import 'package:airwatch_socket_workaround/src/websocket/airwatch_websocket.dart';
 import 'package:http/http.dart' as http;
 
@@ -70,6 +70,13 @@ abstract class AirWatchWebSocketWorkAroundSession<T> {
   StreamSubscription sendFromStream(Stream<String> data);
 
   Future<void> close();
+
+  Future<void> destroy();
+
+  StreamSubscription<T> listen(void Function(T) onData,
+      {Function onError, void Function() onDone, bool cancelOnError});
+
+  void add(dynamic data);
 }
 
 enum WebSocketSessionExceptionType {

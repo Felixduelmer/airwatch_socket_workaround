@@ -236,7 +236,7 @@ public class AirWatchSocketWorkAround: NSObject {
         var flutterEventSink: FlutterEventSink? ;
         init(url: URL) {
             session = URLSession(configuration: .default, delegate: delegate, delegateQueue: OperationQueue())
-            self.webSocketTask = session.webSocketTask(with: url)
+            self.webSocketTask = session.webSocketTask(with: url, protocols: ["mqtt", "mqttv5"])
             webSocketTask.resume()
         }
         /// Finds and calls _onClose on airWatchWorkaroundWebSocketClient instances that have a

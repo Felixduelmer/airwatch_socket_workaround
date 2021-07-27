@@ -10,8 +10,7 @@ import '../logger_factory.dart';
 const _channelName = 'org.goncalopt.airWatchSocketWorkAround/websocket';
 
 /// Implementation that relies on the platform for websocket communication
-class NativeWebSocketSession<T>
-    implements AirWatchWebSocketWorkAroundSession<T> {
+class NativeWebSocketSession<T> implements AirWatchWebSocketWorkAroundSession<T> {
   static final _log = getLogger(NativeWebSocketSession);
   final MethodChannel _dispatcherMethodChannel;
   final String _eventChannelName;
@@ -36,8 +35,8 @@ class NativeWebSocketSession<T>
     }
   }
 
-  NativeWebSocketSession._(this._dispatcherMethodChannel,
-      this._eventChannelName, this._exceptionMapper)
+  NativeWebSocketSession._(
+      this._dispatcherMethodChannel, this._eventChannelName, this._exceptionMapper)
       : assert(_dispatcherMethodChannel != null),
         assert(
           _eventChannelName != null,
@@ -85,11 +84,32 @@ class NativeWebSocketSession<T>
   StreamSubscription sendFromStream(Stream<String> data) => data.listen(send);
 
   @override
+  Future<void> destroy() async {
+    await close();
+  }
+
+  @override
   Future<void> close() async {
     // force closing on the native side
     await (_stream ?? EventChannel(_eventChannelName).receiveBroadcastStream())
         .listen((event) {})
         .cancel();
+  }
+
+  @override
+  StreamSubscription<T> listen(void Function(T) onData,
+      {Function onError, void Function() onDone, bool cancelOnError}) {
+    return receiveBroadcastStream()
+        .listen(onData, onDone: onDone, onError: onError, cancelOnError: cancelOnError);
+  }
+
+  @override
+  void add(data) {
+    if (data is List<int>) {
+      sendByteData(data);
+    } else if (data is String) {
+      send(data);
+    }
   }
 }
 
@@ -99,27 +119,23 @@ class WebSocketSessionException implements Exception {
   final String details;
   final String stacktrace;
 
-  WebSocketSessionException(this.type,
-      {this.message, this.details, this.stacktrace});
+  WebSocketSessionException(this.type, {this.message, this.details, this.stacktrace});
 }
 
 /// Translates between [PlatformException] and [WebSocketSessionException]
 ///
-typedef PlatformToWebSocketSessionExceptionMapper = WebSocketSessionException
-    Function(PlatformException platformException);
+typedef PlatformToWebSocketSessionExceptionMapper = WebSocketSessionException Function(
+    PlatformException platformException);
 
 WebSocketSessionException _defaultPlatformToWebSocketSessionExceptionMapper(
     PlatformException platformException) {
-  WebSocketSessionExceptionType exceptionType =
-      WebSocketSessionExceptionType.unmappedExceptionType;
+  WebSocketSessionExceptionType exceptionType = WebSocketSessionExceptionType.unmappedExceptionType;
   switch (platformException.code) {
     case "failureReceivingMessageFromSocket":
-      exceptionType =
-          WebSocketSessionExceptionType.failureReceivingMessageFromSocket;
+      exceptionType = WebSocketSessionExceptionType.failureReceivingMessageFromSocket;
       break;
     case "unknownContentTypeFromServerMessage":
-      exceptionType =
-          WebSocketSessionExceptionType.unknownContentTypeFromServerMessage;
+      exceptionType = WebSocketSessionExceptionType.unknownContentTypeFromServerMessage;
       break;
     case "illegalArguments":
       exceptionType = WebSocketSessionExceptionType.illegalArguments;
