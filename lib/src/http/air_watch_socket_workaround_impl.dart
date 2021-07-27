@@ -11,7 +11,7 @@ import '../../airwatch_socket_workaround.dart';
 const _httpChannelName = 'org.goncalopt.airWatchSocketWorkAround/http';
 
 /// Implementation of [AirWatchHttpWorkAround]  that relies on
-/// a [MethodChannel] to trigger http resquests on the native side
+/// a [MethodChannel] to trigger http requests on the native side
 @visibleForTesting
 class AirWatchHttpRequestWorkAroundImpl implements AirWatchHttpWorkAround {
   static final _log = getLogger(AirWatchHttpRequestWorkAroundImpl);
@@ -26,10 +26,7 @@ class AirWatchHttpRequestWorkAroundImpl implements AirWatchHttpWorkAround {
 
   @override
   Future<http.Response> doRequest<I>(http.BaseRequest request) async {
-    // we want this in production also assert(request.url != null,'request url cannot be null');
-    assert(request.method != null, 'request method cannot be null');
-    if (request.url == null || request.url.toString().isEmpty)
-      throw ArgumentError('request.url cannot be null/empty');
+    if (request.url.toString().isEmpty) throw ArgumentError('request.url cannot be empty');
     var requestContentType = request.headers['Content-Type'] ?? request.headers['content-type'];
 
     final contentType = requestContentType != null
@@ -47,12 +44,10 @@ class AirWatchHttpRequestWorkAroundImpl implements AirWatchHttpWorkAround {
 
     _log.finest("data is $data");
 
-    // to avoid if != null
-    data = data ?? {};
     Map<String, String> headers = {};
     if (data.containsKey('headers')) {
       headers = (data['headers'] as Map<dynamic, dynamic>)
-          .map((key, value) => MapEntry(key?.toString(), value?.toString()));
+          .map((key, value) => MapEntry(key.toString(), value.toString()));
     }
 
     var statusCode = data["statusCode"] ?? 0;

@@ -15,7 +15,7 @@ class NativeWebSocketSession<T> implements AirWatchWebSocketWorkAroundSession<T>
   final MethodChannel _dispatcherMethodChannel;
   final String _eventChannelName;
   final PlatformToWebSocketSessionExceptionMapper _exceptionMapper;
-  Stream<T> _stream;
+  late Stream<T> _stream;
 
   /// Factory method
   /// builds a [NativeWebSocketSession] using [MethodChannel] to create
@@ -36,16 +36,8 @@ class NativeWebSocketSession<T> implements AirWatchWebSocketWorkAroundSession<T>
   }
 
   NativeWebSocketSession._(
-      this._dispatcherMethodChannel, this._eventChannelName, this._exceptionMapper)
-      : assert(_dispatcherMethodChannel != null),
-        assert(
-          _eventChannelName != null,
-        );
-
-  @override
-  Stream<T> receiveBroadcastStream() {
-    // TODO safe to do this?
-    _stream ??= EventChannel(_eventChannelName)
+      this._dispatcherMethodChannel, this._eventChannelName, this._exceptionMapper) {
+    _stream = EventChannel(_eventChannelName)
         .receiveBroadcastStream()
         .handleError((var error, var stackTrace) {
       _log.warning('Error from native socket $error');
@@ -54,6 +46,10 @@ class NativeWebSocketSession<T> implements AirWatchWebSocketWorkAroundSession<T>
       }
       throw error;
     }).cast();
+  }
+
+  @override
+  Stream<T> receiveBroadcastStream() {
     return _stream;
   }
 
@@ -91,14 +87,12 @@ class NativeWebSocketSession<T> implements AirWatchWebSocketWorkAroundSession<T>
   @override
   Future<void> close() async {
     // force closing on the native side
-    await (_stream ?? EventChannel(_eventChannelName).receiveBroadcastStream())
-        .listen((event) {})
-        .cancel();
+    await _stream.listen((event) {}).cancel();
   }
 
   @override
   StreamSubscription<T> listen(void Function(T) onData,
-      {Function onError, void Function() onDone, bool cancelOnError}) {
+      {Function? onError, void Function()? onDone, bool? cancelOnError}) {
     return receiveBroadcastStream()
         .listen(onData, onDone: onDone, onError: onError, cancelOnError: cancelOnError);
   }
@@ -115,9 +109,9 @@ class NativeWebSocketSession<T> implements AirWatchWebSocketWorkAroundSession<T>
 
 class WebSocketSessionException implements Exception {
   final WebSocketSessionExceptionType type;
-  final String message;
-  final String details;
-  final String stacktrace;
+  final String? message;
+  final String? details;
+  final String? stacktrace;
 
   WebSocketSessionException(this.type, {this.message, this.details, this.stacktrace});
 }

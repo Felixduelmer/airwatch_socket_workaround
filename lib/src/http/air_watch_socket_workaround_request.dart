@@ -4,11 +4,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
+
 import '../air_watch_socket_workaround.dart';
 
 @visibleForTesting
-class ContentTypeBasedHttpRequestBodyProviderFactory
-    implements HttpRequestBodyProviderFactory {
+class ContentTypeBasedHttpRequestBodyProviderFactory implements HttpRequestBodyProviderFactory {
   HttpRequestBodyProvider build(ContentType contentType) {
     final primaryType = contentType.primaryType;
     final subType = contentType.subType;
@@ -42,15 +42,13 @@ class MultipartBodyProvider implements HttpRequestBodyProvider {
       List<MultipartMessage> messages = [];
 
       await Future.forEach(request.files, (file) async {
-        final bytes = await file.finalize().toBytes();
+        final bytes = await (file as MultipartFile).finalize().toBytes();
         final contentType = ContentType.parse(file.contentType.mimeType);
 
-        messages.add(MultipartMessage.fromBytes(file.field, bytes,
-            contentType: contentType));
+        messages.add(MultipartMessage.fromBytes(file.field, bytes, contentType: contentType));
       });
 
-      return jsonEncode(
-          messages.map((e) => e.toJson()).toList(growable: false));
+      return jsonEncode(messages.map((e) => e.toJson()).toList(growable: false));
     } else {
       throw ArgumentError('Provided request is not a valid Multipart one');
     }
@@ -69,8 +67,7 @@ class StringBodyProvider implements HttpRequestBodyProvider {
     if (request is Request) {
       return request.body;
     } else {
-      throw ArgumentError(
-          'Provided request is not a valid one with a String body');
+      throw ArgumentError('Provided request is not a valid one with a String body');
     }
   }
 
@@ -79,8 +76,7 @@ class StringBodyProvider implements HttpRequestBodyProvider {
     if (request is Request) {
       return request.encoding;
     } else {
-      throw ArgumentError(
-          'Provided request is not a valid one with a String body');
+      throw ArgumentError('Provided request is not a valid one with a String body');
     }
   }
 }
@@ -92,8 +88,7 @@ class RawBodyProvider implements HttpRequestBodyProvider {
     if (request is Request) {
       return request.bodyBytes;
     } else {
-      throw ArgumentError(
-          'Provided request is not a valid one with a Raw bytes body');
+      throw ArgumentError('Provided request is not a valid one with a Raw bytes body');
     }
   }
 
@@ -102,8 +97,7 @@ class RawBodyProvider implements HttpRequestBodyProvider {
     if (request is Request) {
       return request.encoding;
     } else {
-      throw ArgumentError(
-          'Provided request is not a valid one with a String body');
+      throw ArgumentError('Provided request is not a valid one with a String body');
     }
   }
 }
@@ -124,50 +118,42 @@ class MultipartMessage {
 
   /// Creates a new [MultipartFile] from an array of bytes, with a default
   /// content-type of `application/octet-stream`.
-  MultipartMessage(this.name, this.data, this.length, {ContentType contentType})
+  MultipartMessage(this.name, this.data, this.length, {ContentType? contentType})
       : contentType = contentType ?? ContentType.binary;
 
   /// Creates a new [MultipartFile] from a byte array, with a default
   /// content-type of `application/octet-stream`.
-  factory MultipartMessage.fromBytes(String field, Uint8List rawBytes,
-      {ContentType contentType}) {
+  factory MultipartMessage.fromBytes(String field, Uint8List rawBytes, {ContentType? contentType}) {
     return MultipartMessage(field, rawBytes, rawBytes.length,
         contentType: contentType ?? ContentType.binary);
   }
 
   /// Creates a new [MultipartFile] from a string, with a default content type
   /// of `text/plain` and UTF-8 encoding.
-  factory MultipartMessage.fromString(String field, String value,
-      {ContentType contentType}) {
+  factory MultipartMessage.fromString(String field, String value, {ContentType? contentType}) {
     contentType ??= ContentType.text;
     final encoder = Encoding.getByName(contentType.charset);
 
-    return MultipartMessage.fromBytes(field, encoder.encode(value),
+    return MultipartMessage.fromBytes(field, encoder!.encode(value) as Uint8List,
         contentType: contentType);
   }
 
   /// Creates a new [MultipartFile] from a Json map, with a default content type
   /// of `application/json` and UTF-8 encoding.
   factory MultipartMessage.fromJson(String field, Map<String, dynamic> value,
-      {ContentType contentType}) {
+      {ContentType? contentType}) {
     final jsonEncoded = json.encode(value);
 
     return MultipartMessage.fromString(field, jsonEncoded,
         contentType: contentType ?? ContentType.json);
   }
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'length': length,
-        'contentType': contentType.value,
-        'data': data
-      };
+  Map<String, dynamic> toJson() =>
+      {'name': name, 'length': length, 'contentType': contentType.value, 'data': data};
 
-  static MultipartMessage fromCodec<T>(
-      String field, T value, Codec<T, List<int>> codec,
-      {ContentType contentType}) {
-    return MultipartMessage.fromBytes(
-        field, Uint8List.fromList(codec.encode(value)),
+  static MultipartMessage fromCodec<T>(String field, T value, Codec<T, List<int>> codec,
+      {ContentType? contentType}) {
+    return MultipartMessage.fromBytes(field, Uint8List.fromList(codec.encode(value)),
         contentType: contentType);
   }
 }
